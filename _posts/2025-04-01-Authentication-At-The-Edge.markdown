@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "A Case for Authentication at the Edge"
+title:  "Authentication at the Edge"
 date:   2025-04-01 09:00:00 +0200
 categories: Next.js middleware authentication
 ---

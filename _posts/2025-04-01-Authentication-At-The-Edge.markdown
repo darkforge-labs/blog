@@ -5,7 +5,7 @@ date:   2025-04-01 09:00:00 +0200
 categories: Next.js middleware authentication
 ---
 
-# Authentication at the Edge
+# CVE-2025-29927
 
 When [CVE-2025-29927](https://zhero-web-sec.github.io/research-and-things/nextjs-and-the-corrupt-middleware) dropped, it lit up the infosec world. An authentication bypass in Next.js middleware raised urgent questions not just about the vulnerability itself but about architectural choices.
 

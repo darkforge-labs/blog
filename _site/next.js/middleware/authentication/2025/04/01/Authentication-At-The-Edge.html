@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>The DarkForge Labs Blog | Welcome to the DarkForge Labs blog! We explore topics that intrigue us, from security research to upcoming events. Enjoy your stay! – The DarkForge Labs Team</title>
+<meta name="generator" content="Jekyll v4.3.4" />
+<meta property="og:title" content="The DarkForge Labs Blog" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Welcome to the DarkForge Labs blog! We explore topics that intrigue us, from security research to upcoming events. Enjoy your stay! – The DarkForge Labs Team" />
+<meta property="og:description" content="Welcome to the DarkForge Labs blog! We explore topics that intrigue us, from security research to upcoming events. Enjoy your stay! – The DarkForge Labs Team" />
+<link rel="canonical" href="http://localhost:4000/" />
+<link rel="stylesheet" href="/assets/css/style.css">
+<meta property="og:url" content="http://localhost:4000/" />
+<meta property="og:site_name" content="The DarkForge Labs Blog" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="The DarkForge Labs Blog" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","description":"Welcome to the DarkForge Labs blog! We explore topics that intrigue us, from security research to upcoming events. Enjoy your stay! – The DarkForge Labs Team","headline":"The DarkForge Labs Blog","name":"The DarkForge Labs Blog","url":"http://localhost:4000/"}</script>
+<!-- End Jekyll SEO tag -->
+<link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="The DarkForge Labs Blog" />
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/"><img src="/assets/images/DarkForge-Labs-CI-Logo-Final.svg" alt="DarkForge Labs Logo" height="200" ></a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">A Case for Authentication at the Edge</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-04-01T09:00:00+02:00" itemprop="datePublished">Apr 1, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1 id="authentication-at-the-edge">Authentication at the Edge</h1>
+
+<p>When <a href="https://zhero-web-sec.github.io/research-and-things/nextjs-and-the-corrupt-middleware">CVE-2025-29927</a> dropped, it lit up the infosec world. An authentication bypass in Next.js middleware raised urgent questions not just about the vulnerability itself but about architectural choices.</p>
+
+<p><em>Should we be enforcing authentication in the middleware?</em></p>
+
+<p>It’s a question that’s polarized developers and security engineers alike. <a href="https://x.com/moopinger/status/1906281539815579790">Our own X poll came back split almost exactly down the middle.</a></p>
+
+<p>But after digging into the excellent write-ups from <a href="https://www.neoxs.me/blog/critical-nextjs-middleware-vulnerability-cve-2025-29927-authentication-bypass">neox</a>, <a href="https://slcyber.io/assetnote-security-research-center/doing-the-due-diligence-analysing-the-next-js-middleware-bypass-cve-2025-29927">Assetnote</a>, <a href="https://jfrog.com/blog/cve-2025-29927-next-js-authorization-bypass/">JFrog</a>, and <a href="https://www.rapid7.com/blog/post/2025/03/25/etr-notable-vulnerabilities-in-next-js-cve-2025-29927/">Rapid7</a> — we realized something:</p>
+
+<p>We’ve been asking the wrong question.</p>
+
+<h2 id="the-real-question-should-all-your-authentication-run-in-nextjs-middleware">The Real Question: Should <em>All</em> Your Authentication Run in <em>Next.js</em> Middleware?</h2>
+
+<p>That’s the actual crux. And the answer is a resounding <span class="underline">no</span>.</p>
+
+<p>Middleware in Next.js, especially in the App Router, runs in an <strong>edge runtime</strong>. That means it operates in a different environment than your backend or API routes. It’s fast, global, and lightweight. But it also has real limitations:</p>
+
+<ul>
+  <li><a href="https://nextjs.org/docs/app/building-your-application/rendering/edge-and-nodejs-runtimes">The edge runtime runs on a separate more limited Node runtime</a></li>
+  <li><a href="https://clerk.com/blog/what-is-middleware-in-nextjs">Limited access to full request bodies</a></li>
+</ul>
+
+<p>Compare this to <code class="language-plaintext highlighter-rouge">Express.js</code> middleware, which runs in a Node.js server with full control over the request lifecycle. Same word <em>middleware</em> but completely different realities.</p>
+
+<p>That distinction matters. Because when you put critical auth logic in Next.js edge middleware, you’re betting your security on a layer that wasn’t built for that burden.</p>
+
+<p>Even <strong>Vercel</strong> says as much in their <a href="https://vercel.com/blog/postmortem-on-next-js-middleware-bypass">postmortem</a>:</p>
+
+<blockquote>
+  <p>“We do not recommend Middleware to be the sole method of protecting routes in your application”</p>
+</blockquote>
+
+<h2 id="so-what-is-edge-based-middleware-good-for">So What Is Edge Based Middleware Good For?</h2>
+
+<p>Used correctly, Next.js middleware can still be a powerful tool — especially for <strong>coarse-grained access control</strong>. Think of it like the lobby guard, not the vault door.</p>
+
+<ul>
+  <li><strong>Use it to block unauthenticated users</strong> from public routes</li>
+  <li><strong>Redirect users to login</strong> if they’re missing a session</li>
+  <li><strong>Apply basic tenant-aware routing</strong></li>
+</ul>
+
+<p>But the real enforcement should happen deeper:</p>
+
+<ul>
+  <li><strong>Don’t check roles or permissions here</strong></li>
+  <li><strong>Don’t make critical auth decisions</strong> based only on this layer</li>
+</ul>
+
+<p>Instead, <strong>put your fine-grained logic</strong> on the server side — RBAC, ABAC, tenant isolation — <strong>inside your API routes or backend logic</strong>.</p>
+
+<h2 id="lessons-from-cve-2025-29927">Lessons from CVE-2025-29927</h2>
+
+<p>The flaw that triggered this debate didn’t involve tricky encoding or exotic Unicode behavior to bypass route matches. It was much simpler: by crafting a request with a specific HTTP header (<code class="language-plaintext highlighter-rouge">x-middleware-subrequest</code>), attackers could trick the server into skipping middleware entirely — and bypass authentication logic that only lived there.</p>
+
+<p>It’s a classic case of trusting the wrong layer.</p>
+
+<blockquote>
+  <p><strong>If one bypass breaks your security, you didn’t have security. You had hope.</strong></p>
+</blockquote>
+
+<p>Here’s how to build for reality:</p>
+
+<ul>
+  <li><strong>Defend in depth</strong> — don’t make any single layer your only layer.</li>
+  <li><strong>Authorize where it counts</strong> — at the point of data access, in your APIs.</li>
+</ul>
+
+<h2 id="final-thoughts">Final Thoughts</h2>
+
+<p>CVE-2025-29927 isn’t the first middleware bypass — and it likely won’t be the last. That doesn’t mean middleware auth in Next.js is useless. Far from it.</p>
+
+<p>Edge-based middleware is still a great place for coarse-grained controls. It can improve UX. It can help performance. It can offload basic gating logic.</p>
+
+<p>But <span class="underline">it can’t be your only line of defense.</span></p>
+
+<p>Use edge middleware wisely, as a first-pass filter, not your final gatekeeper. Build layers. Validate everywhere. And expect failure.</p>
+
+<p>Because someone out there is already crafting the next bypass.</p>
+
+  </div><a class="u-url" href="/next.js/middleware/authentication/2025/04/01/Authentication-At-The-Edge.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">The DarkForge Labs Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">The DarkForge Labs Blog</li><li><a href="https://darkforge.io">https://darkforge.io/</a></li><li><a class="u-email" href="mailto:info@darkforge.io">info@darkforge.io</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/darkforge-labs"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">darkforge-labs</span></a></li><li><a href="https://www.linkedin.com/company/darkforge-labs"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#linkedin"></use></svg> <span class="username">darkforge-labs</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Welcome to the DarkForge Labs blog! We explore topics that  intrigue us, from security research to upcoming events.  Enjoy your stay! – The DarkForge Labs Team</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

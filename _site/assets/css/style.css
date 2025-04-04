@@ -5,6 +5,10 @@
     font-style: normal;
 }
 
+html {
+  font-size: 110%;
+}
+
 body {
     font-family: 'MyCustomFont', Arial, sans-serif;
 }
@@ -75,7 +79,7 @@ figure > img {
 }
 
 figcaption {
-  font-size: 14px;
+  font-size: 16px;
 }
 
 /**
@@ -125,7 +129,7 @@ blockquote {
   color: #828282;
   border-left: 4px solid #e8e8e8;
   padding-left: 15px;
-  font-size: 18px;
+  font-size: 20px;
   letter-spacing: -1px;
   font-style: italic;
 }
@@ -139,7 +143,7 @@ blockquote > :last-child {
 pre,
 code {
   font-family: 'MyCustomFont', Arial, sans-serif;
-  font-size: 15px;
+  font-size: 17px;
   border: 1px solid #e8e8e8;
   border-radius: 3px;
   background-color: #eef;
@@ -243,7 +247,7 @@ table td {
 }
 
 .site-title {
-  font-size: 26px;
+  font-size: 33px;
   font-weight: 300;
   line-height: 54px;
   letter-spacing: -1px;
@@ -330,7 +334,7 @@ table td {
 }
 
 .footer-heading {
-  font-size: 18px;
+  font-size: 20px;
   margin-bottom: 15px;
 }
 
@@ -341,7 +345,7 @@ table td {
 }
 
 .footer-col-wrapper {
-  font-size: 15px;
+  font-size: 17px;
   color: #828282;
   margin-left: -15px;
 }
@@ -394,11 +398,11 @@ table td {
 }
 
 .page-heading {
-  font-size: 32px;
+  font-size: 35px;
 }
 
 .post-list-heading {
-  font-size: 28px;
+  font-size: 30px;
 }
 
 .post-list {
@@ -410,13 +414,13 @@ table td {
 }
 
 .post-meta {
-  font-size: 14px;
+  font-size: 15px;
   color: #828282;
 }
 
 .post-link {
   display: block;
-  font-size: 24px;
+  font-size: 26px;
 }
 
 /**
@@ -427,13 +431,13 @@ table td {
 }
 
 .post-title {
-  font-size: 42px;
+  font-size: 46px;
   letter-spacing: -1px;
   line-height: 1;
 }
 @media screen and (max-width: 800px) {
   .post-title {
-    font-size: 36px;
+    font-size: 40px;
   }
 }
 
@@ -441,27 +445,27 @@ table td {
   margin-bottom: 30px;
 }
 .post-content h2 {
-  font-size: 32px;
+  font-size: 35px;
 }
 @media screen and (max-width: 800px) {
   .post-content h2 {
-    font-size: 28px;
+    font-size: 31px;
   }
 }
 .post-content h3 {
-  font-size: 26px;
+  font-size: 29px;
 }
 @media screen and (max-width: 800px) {
   .post-content h3 {
-    font-size: 22px;
+    font-size: 24px;
   }
 }
 .post-content h4 {
-  font-size: 20px;
+  font-size: 22px;
 }
 @media screen and (max-width: 800px) {
   .post-content h4 {
-    font-size: 18px;
+    font-size: 19px;
   }
 }
 

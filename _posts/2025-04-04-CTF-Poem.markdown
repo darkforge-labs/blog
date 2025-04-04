@@ -13,6 +13,8 @@ This CTF was inspired by the article [*Impossible XXE in PHP*](https://swarm.pts
 
 ## The Challenge
 
+![The Challenge](/assets/images/8547585d23cb272c9c59d16187874544430ce34b.png)
+
 The challenge was hosted at [https://ctf.darkfor.ge](https://ctf.darkfor.ge/) with the source available on our [GitHub](https://github.com/darkforge-labs/ctf-poem-web).
 
 Digging into [`index.php`](https://github.com/darkforge-labs/ctf-poem-web/blob/main/index.php), we find three interesting things:

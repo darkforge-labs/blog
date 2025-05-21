@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>The DarkForge Labs Blog | Welcome to the DarkForge Labs blog! We explore topics that intrigue us, from security research to upcoming events. Enjoy your stay! – The DarkForge Labs Team</title>
+<meta name="generator" content="Jekyll v4.3.4" />
+<meta property="og:title" content="The DarkForge Labs Blog" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Welcome to the DarkForge Labs blog! We explore topics that intrigue us, from security research to upcoming events. Enjoy your stay! – The DarkForge Labs Team" />
+<meta property="og:description" content="Welcome to the DarkForge Labs blog! We explore topics that intrigue us, from security research to upcoming events. Enjoy your stay! – The DarkForge Labs Team" />
+<link rel="canonical" href="http://blog.darkforge.io/" />
+<link rel="stylesheet" href="/assets/css/style.css">
+<meta property="og:url" content="http://blog.darkforge.io/" />
+<meta property="og:site_name" content="The DarkForge Labs Blog" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="The DarkForge Labs Blog" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","description":"Welcome to the DarkForge Labs blog! We explore topics that intrigue us, from security research to upcoming events. Enjoy your stay! – The DarkForge Labs Team","headline":"The DarkForge Labs Blog","name":"The DarkForge Labs Blog","url":"https://blog.darkforge.io/"}</script>
+<!-- End Jekyll SEO tag -->
+<link type="application/atom+xml" rel="alternate" href="https://blog.darkforge.io/feed.xml" title="The DarkForge Labs Blog" />
+</head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/"><img src="/assets/images/DarkForge-Labs-CI-Logo-Final.svg" alt="DarkForge Labs Logo" height="200" ></a>
+<!--
+<nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+      </nav>
+-->
+</div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">CEFSharp Enumeration With CefEnum</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-05-21T09:00:00+02:00" itemprop="datePublished">May 21, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h2 id="tldr">TLDR</h2>
+<p><a href="https://github.com/cefsharp/CefSharp/">CefSharp</a> is widely embedded in .NET-based Thick-Clients, often without proper hardening or awareness of its security implications. For researchers and red teamers, this creates opportunities for stealthy exploitation, persistence, and even remote code execution (RCE) if misconfigurations are identified.</p>
+
+<p>In this post, we explore common misconfigurations and attack vectors encountered during testing. We’re also releasing a new enumeration tool to help you quickly identify and fingerprint CefSharp instances in your engagements.</p>
+
+<h2 id="cef">CEF</h2>
+<p>Before we discuss CefSharp, let’s look at <a href="https://github.com/chromiumembedded/cef">CEF</a> (Chromium Embedded Framework).</p>
+
+<blockquote>
+  <p>Chromium Embedded Framework (CEF). A simple framework for embedding Chromium-based browsers in other applications.
+CEF is a BSD-licensed open source project founded by Marshall Greenblatt in 2008 and based on the Google Chromium project. Unlike the Chromium project itself, which focuses mainly on Google Chrome application development, CEF focuses on facilitating embedded browser use cases in third-party applications. CEF insulates the user from the underlying Chromium and Blink code complexity by offering production-quality stable APIs, release branches tracking specific Chromium releases, and binary distributions.</p>
+</blockquote>
+
+<ul>
+  <li><a href="https://github.com/chromiumembedded/cef">https://github.com/chromiumembedded/cef</a></li>
+</ul>
+
+<h2 id="cefsharp">CefSharp</h2>
+<p><img src="/assets/images/04fe27e7a409e3c463dec186a49254d49f4d1ea2.png" alt="CefSharp Logo" width="300px" /></p>
+
+<p>What exactly is <a href="https://github.com/cefsharp/CefSharp/">CefSharp</a>?</p>
+
+<blockquote>
+  <p>CefSharp lets you embed Chromium in .NET apps. It is a lightweight .NET wrapper around the Chromium Embedded Framework (CEF) by Marshall A. Greenblatt. About 30% of the bindings are written in C++/CLI with the majority of code here is C#. It can be used from C# or VB, or any other CLR language. CefSharp provides both WPF and WinForms web browser control implementations.</p>
+</blockquote>
+
+<ul>
+  <li><a href="https://github.com/cefsharp/CefSharp/">https://github.com/cefsharp/CefSharp/</a></li>
+</ul>
+
+<h2 id="web-based-thick-client">Web Based Thick-Client</h2>
+<p>Much like Electron, CefSharp enables developers to build desktop applications using web technologies, tailored specifically for the Windows and .NET ecosystem. Its real power lies in its ability to expose internal .NET objects to client-side JavaScript, creating a bidirectional bridge between the client frontend and the user’s system.</p>
+
+<p>This architecture can allow web pages to interact with privileged system functions, something that, when misconfigured, becomes a valuable entry point for security researchers. It can lead to file access, method invocation, or even command execution directly from the browser context.</p>
+
+<h2 id="attack-scope">Attack Scope</h2>
+<p>Finding client-side vulnerabilities like XSS in a Thick-Client may seem unconventional, especially since users don’t interact with the app like a typical browser. But as we’ve seen repeatedly with Electron-based apps, these flaws can lead to severe consequences—and CefSharp is no different. When XSS is combined with CefSharp’s JavaScript bridge to exposed .NET objects, a persistent XSS can quickly escalate into RCE.</p>
+
+<p>Before crafting any payloads, though, you need to understand which objects are exposed to the client/browser front-end via CefSharp.</p>
+
+<h2 id="finding-exposed-objects-with-access-to-the-client-source-code">Finding Exposed Objects, With Access To The Client Source Code.</h2>
+<p>This is straightforward. According to the CefSharp wiki, there are two methods to register your object with <code class="language-plaintext highlighter-rouge">browser.JavascriptObjectRepository</code>. In both examples below, the exposed object is named <code class="language-plaintext highlighter-rouge">boundAsync</code>, referencing the <code class="language-plaintext highlighter-rouge">BoundObject</code> class. (Note: bindable object names will generally follow camelCase, not PascalCase.)</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//For async object registration (equivalent to the old RegisterAsyncJsObject)</span>
+<span class="n">browser</span><span class="p">.</span><span class="n">JavascriptObjectRepository</span><span class="p">.</span><span class="n">Register</span><span class="p">(</span><span class="s">"boundAsync"</span><span class="p">,</span> <span class="k">new</span> <span class="nf">BoundObject</span><span class="p">(),</span> <span class="nb">true</span><span class="p">,</span> <span class="n">BindingOptions</span><span class="p">.</span><span class="n">DefaultBinder</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>And:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">browser</span><span class="p">.</span><span class="n">JavascriptObjectRepository</span><span class="p">.</span><span class="n">ResolveObject</span> <span class="o">+=</span> <span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span> <span class="o">=&gt;</span>
+<span class="p">{</span>
+	<span class="n">var</span> <span class="n">repo</span> <span class="o">=</span> <span class="n">e</span><span class="p">.</span><span class="n">ObjectRepository</span><span class="p">;</span>
+	<span class="k">if</span> <span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">ObjectName</span> <span class="o">==</span> <span class="s">"boundAsync"</span><span class="p">)</span>
+	<span class="p">{</span>
+		<span class="n">BindingOptions</span> <span class="n">bindingOptions</span> <span class="o">=</span> <span class="n">null</span><span class="p">;</span> <span class="c1">//Binding options is an optional param, defaults to null</span>
+		<span class="n">bindingOptions</span> <span class="o">=</span> <span class="n">BindingOptions</span><span class="p">.</span><span class="n">DefaultBinder</span> <span class="c1">//Use the default binder to serialize values into complex objects</span>
+		<span class="n">bindingOptions</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BindingOptions</span> <span class="p">{</span> <span class="n">Binder</span> <span class="o">=</span> <span class="k">new</span> <span class="n">MyCustomBinder</span><span class="p">()</span> <span class="p">});</span> <span class="c1">//Specify a custom binder</span>
+		<span class="n">repo</span><span class="p">.</span><span class="n">NameConverter</span> <span class="o">=</span> <span class="n">null</span><span class="p">;</span> <span class="c1">//No CamelCase of Javascript Names</span>
+		<span class="c1">//For backwards compatability reasons the default NameConverter doesn't change the case of the objects returned from methods calls.</span>
+		<span class="c1">//https://github.com/cefsharp/CefSharp/issues/2442</span>
+		<span class="c1">//Use the new name converter to bound object method names and property names of returned objects converted to camelCase</span>
+		<span class="n">repo</span><span class="p">.</span><span class="n">NameConverter</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">CamelCaseJavascriptNameConverter</span><span class="p">();</span>
+		<span class="n">repo</span><span class="p">.</span><span class="n">Register</span><span class="p">(</span><span class="s">"boundAsync"</span><span class="p">,</span> <span class="k">new</span> <span class="nf">BoundObject</span><span class="p">(),</span> <span class="n">isAsync</span><span class="o">:</span> <span class="nb">true</span><span class="p">,</span> <span class="n">options</span><span class="o">:</span> <span class="n">bindingOptions</span><span class="p">);</span>
+	<span class="p">}</span>
+<span class="p">};</span>
+</code></pre></div></div>
+<p>From here you simply locate the “BoundObject” class, and inspect what methods are available.</p>
+
+<h2 id="interact-with-the-client">Interact with the client</h2>
+<p>If a CefSharp client retrieves a malicious page, that page can bind to the exposed object and invoke its methods directly. We’ve created a vulnerable test application called BadBrowser for you to try this out yourself:</p>
+
+<ul>
+  <li><a href="https://github.com/darkforge-labs/badbrowser">https://github.com/darkforge-labs/badbrowser</a>.</li>
+</ul>
+
+<p>In the code below, we use <code class="language-plaintext highlighter-rouge">CefSharp.BindObjectAsync("customObject")</code> to bind to <code class="language-plaintext highlighter-rouge">customObject</code> and execute the <code class="language-plaintext highlighter-rouge">WriteFile()</code> method with <code class="language-plaintext highlighter-rouge">window.customObject.WriteFile("test.txt")</code>.</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">CefSharp</span><span class="p">.</span><span class="nc">BindObjectAsync</span><span class="p">(</span><span class="dl">"</span><span class="s2">customObject</span><span class="dl">"</span><span class="p">);</span>
+<span class="nb">window</span><span class="p">.</span><span class="nx">customObject</span><span class="p">.</span><span class="nc">WriteFile</span><span class="p">(</span><span class="dl">"</span><span class="s2">test.txt</span><span class="dl">"</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>or</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">function</span> <span class="nf">bindAndRun</span><span class="p">(){</span><span class="nx">CefSharp</span><span class="p">.</span><span class="nc">BindObjectAsync</span><span class="p">(</span><span class="dl">"</span><span class="s2">customObject</span><span class="dl">"</span><span class="p">).</span><span class="nf">then</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">n</span><span class="p">){</span><span class="nb">window</span><span class="p">.</span><span class="nx">customObject</span><span class="p">.</span><span class="nc">WriteFile</span><span class="p">(</span><span class="dl">"</span><span class="s2">test.txt</span><span class="dl">"</span><span class="p">)}).</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">n</span><span class="p">){</span><span class="nx">console</span><span class="p">.</span><span class="nf">error</span><span class="p">(</span><span class="dl">"</span><span class="s2">Failed:</span><span class="dl">"</span><span class="p">,</span><span class="nx">n</span><span class="p">)})}</span><span class="nb">window</span><span class="p">.</span><span class="nf">addEventListener</span><span class="p">(</span><span class="dl">"</span><span class="s2">load</span><span class="dl">"</span><span class="p">,</span><span class="kd">function</span><span class="p">(){</span><span class="nf">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">(){</span><span class="nf">bindAndRun</span><span class="p">()},</span><span class="mi">2</span><span class="nx">e2</span><span class="p">)});</span>
+</code></pre></div></div>
+
+<p>Now, when we view a page containing the above JavaScript in BadBrowser, a file named test.txt is written to <code class="language-plaintext highlighter-rouge">C:/tmp/</code>.</p>
+
+<h2 id="delivering-the-payload-getting-the-client-to-load-your-page">Delivering the Payload (Getting the Client to Load Your Page)</h2>
+<p>If you’ve discovered a persistent XSS vulnerability in the client’s portal, you can embed your payload into the page, launch the client, and trigger the XSS as it renders.</p>
+
+<p>If direct navigation is restricted and custom URLs can’t be entered, there’s a common workaround: drag a link to your test page from another browser and drop it into the client window.</p>
+
+<p><img src="/assets/images/28eb4850e5fc5953bd5ad52b663689356606ce33.png" alt="Drag Link Across" /></p>
+
+<h2 id="finding-exposed-objects-without-access-to-the-source-code">Finding Exposed Objects, without access to the source code.</h2>
+<p>If you’re testing a client without access to its source code, you can use <a href="https://github.com/darkforge-labs/cefenum">CefEnum</a>. This simple tool helps detect CefSharp-based clients and identify .NET objects exposed to JavaScript.</p>
+
+<p>When you launch CefEnum, it starts an HTTP listener on port 9090 (configurable via the -port flag). Upon a client connection, CefEnum first delivers a wordlist to the client, which is stored in the front-end. These words are then used to fuzz and guess exposed object names. The tool includes a default wordlist based on <a href="https://github.com/PortSwigger/param-miner">PortSwigger’s param-miner</a>.</p>
+
+<p>After that, CefEnum checks whether the connecting client is running CefSharp.</p>
+
+<p><img src="/assets/images/743b5ddf541b740b3fe0d7f46e45a2d0c9f4f1e9.png" alt="Client connected" width="500px" /></p>
+
+<p>You can interact directly with the client from the command line. CefEnum will pass messages to the clients over a WebSocket. You can either type JavaScript directly into the console, or use the built-in helper functions to do the work for you.</p>
+
+<p><img src="/assets/images/76b81351e6640094863a96e68eb51d7e0ed55819.png" alt="Client connected" width="500px" /></p>
+
+<h2 id="fuzz">Fuzz</h2>
+<p>This is the core feature of CefEnum: it attempts to bind to every object name in the wordlist. For each entry, the page executes <code class="language-plaintext highlighter-rouge">CefSharp.BindObjectAsync("ObjectName")</code> and checks whether the binding was successful using <code class="language-plaintext highlighter-rouge">CefSharp.IsObjectCached(ObjectName)</code>. This process runs at roughly 2,000 attempts per second, and you can expand it by supplying a larger wordlist.</p>
+
+<p>CefEnum also supports common suffixes, which are automatically appended to each wordlist entry and tested as well. These suffixes include:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">var</span> <span class="nx">commonSuffix</span> <span class="o">=</span> <span class="p">[</span><span class="dl">"</span><span class="s2">Api</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">Object</span><span class="dl">"</span><span class="p">,</span> <span class="dl">"</span><span class="s2">Class</span><span class="dl">"</span><span class="p">];</span>
+</code></pre></div></div>
+
+<p><img src="/assets/images/6cba0ae35d27b05f23223171df494dbb588be540.png" alt="object fuzz" width="500px" /></p>
+
+<p>You can use your own wordlist by specifying it at startup with the <code class="language-plaintext highlighter-rouge">-wordlist=./wl.txt</code> flag.</p>
+
+<h2 id="brute">Brute</h2>
+<p>You can also brute-force object names with the <code class="language-plaintext highlighter-rouge">brute</code> command [a-zA-Z] This uses the same detection method as <code class="language-plaintext highlighter-rouge">fuzz</code>, but it’s not recommended as performance drops off quickly, and the process becomes impractical beyond five-character names.</p>
+
+<h2 id="bind">Bind</h2>
+<p>Once you’ve discovered an object, use the <code class="language-plaintext highlighter-rouge">bind</code> command to instruct the client to enumerate all available methods/functions via introspection:</p>
+
+<p><img src="/assets/images/7b6b0cf85237943f18ae4f47c3073638eea327a6.png" alt="object bind" width="500px" /></p>
+
+<h2 id="run-within-the-client">Run within the client</h2>
+<p>You can also conduct all these attacks from within the client/browser itself if your page is rendered within the client.</p>
+
+<p><img src="/assets/images/8e0f05bd24bf0445c2222af229c2aa06b21f1179.png" alt="Testing within the client" /></p>
+
+<h2 id="interact-with-the-binding">Interact with the binding</h2>
+<p>Once you’ve identified an object and successfully enumerated its methods, you can invoke them using:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">window</span><span class="p">.</span><span class="nx">objectName</span><span class="p">.</span><span class="nc">MethodName</span><span class="p">(</span><span class="dl">"</span><span class="s2">myparameter</span><span class="dl">"</span><span class="p">)</span><span class="s2">`
+</span></code></pre></div></div>
+
+<p>Just replace objectName and methodName with the appropriate values. As seen for BadBrowser’s <code class="language-plaintext highlighter-rouge">cusomObject</code> with the WriteFile() method:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">window</span><span class="p">.</span><span class="nx">customObject</span><span class="p">.</span><span class="nc">WriteFile</span><span class="p">(</span><span class="dl">"</span><span class="s2">test.txt</span><span class="dl">"</span><span class="p">);</span>
+</code></pre></div></div>
+
+<h2 id="prevention">Prevention</h2>
+<p>If your portal is not intended to load content from external domains, implement a strict allowlist of trusted origins. Deny any requests attempting to load resources from outside this list. (Note: This might sound like configuring the CSP, but this list must be enforced within the client’s C# code, not the web server.)</p>
+
+<p>This, however, won’t prevent all attacks. For example, if the portal hosting the backend site contains XSS vulnerabilities, attackers can simply embed their attack payload into the portal itself.</p>
+
+<p>Carefully review the classes you expose to the browser and ensure that only those with minimal, tightly scoped methods are bound.</p>
+
+<p>If you’re unsure or would like a second opinion, book a session with us at DarkForge Labs, we’d be happy to help.</p>
+
+<h2 id="final-words">Final Words</h2>
+<p><a href="https://github.com/cefsharp/CefSharp">CefSharp</a> is an excellent project, maintained by a great community. It remains a popular choice for enterprises developing in-house thick-clients.</p>
+
+<p>If there’s a faster or more effective way to enumerate object names that we’ve missed, feel free to submit a PR. Thanks for reading!</p>
+
+  </div><a class="u-url" href="/cef/cefsharp/cefenum/thick-client/.net/2025/05/21/CefSharp-Enumeration-With-CefEnum.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">The DarkForge Labs Blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">The DarkForge Labs Blog</li><li><a href="https://darkforge.io">https://darkforge.io/</a></li><li><a class="u-email" href="mailto:info@darkforge.io">info@darkforge.io</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/darkforge-labs"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">darkforge-labs</span></a></li><li><a href="https://www.linkedin.com/company/darkforge-labs"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#linkedin"></use></svg> <span class="username">darkforge-labs</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Welcome to the DarkForge Labs blog! We explore topics that  intrigue us, from security research to upcoming events.  Enjoy your stay! – The DarkForge Labs Team</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

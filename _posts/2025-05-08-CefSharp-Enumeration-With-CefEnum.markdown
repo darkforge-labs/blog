@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "CEFSharp Enumeration With CefEnum"
+title:  "CefSharp Enumeration With CefEnum"
 date:   2025-05-21 09:00:00 +0200
 categories: CEF CefSharp CefEnum Thick-Client .NET
 ---

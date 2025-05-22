@@ -6,9 +6,11 @@ categories: CEF CefSharp CefEnum Thick-Client .NET
 ---
 
 ## TLDR
-[CefSharp](https://github.com/cefsharp/CefSharp/) is widely embedded in .NET-based Thick-Clients, often without proper hardening or awareness of its security implications. For researchers and red teamers, this creates opportunities for stealthy exploitation, persistence, and even remote code execution (RCE) if misconfigurations are identified.
+[CefSharp](https://github.com/cefsharp/CefSharp/) is widely embedded in .NET-based Thick-Clients, often without proper hardening or awareness of its security implications. For researchers and red teamers, this creates opportunities for stealthy exploitation, persistence, and even RCE if misconfigurations are identified.
 
 In this post, we explore common misconfigurations and attack vectors encountered during testing. We’re also releasing a new enumeration tool to help you quickly identify and fingerprint CefSharp instances in your engagements.
+
+**Download CefEnum**: [https://github.com/darkforge-labs/cefenum](https://github.com/darkforge-labs/cefenum)
 
 
 ## CEF
@@ -38,7 +40,7 @@ Finding client-side vulnerabilities like XSS in a Thick-Client may seem unconven
 
 Before crafting any payloads, though, you need to understand which objects are exposed to the client/browser front-end via CefSharp.
 
-## Finding Exposed Objects, With Access To The Client Source Code.
+## Finding Exposed Objects, With Access To The Client Source Code
 This is straightforward. According to the CefSharp wiki, there are two methods to register your object with `browser.JavascriptObjectRepository`. In both examples below, the exposed object is named `boundAsync`, referencing the `BoundObject` class. (Note: bindable object names will generally follow camelCase, not PascalCase.)
 
 ```cpp
@@ -95,7 +97,7 @@ If direct navigation is restricted and custom URLs can't be entered, there’s a
 
 ![Drag Link Across](/assets/images/28eb4850e5fc5953bd5ad52b663689356606ce33.png)
 
-## Finding Exposed Objects, without access to the source code.
+## Finding Exposed Objects, without access to the source code
 If you're testing a client without access to its source code, you can use [CefEnum](https://github.com/darkforge-labs/cefenum). This simple tool helps detect CefSharp-based clients and identify .NET objects exposed to JavaScript.
 
 When you launch CefEnum, it starts an HTTP listener on port 9090 (configurable via the -port flag). Upon a client connection, CefEnum first delivers a wordlist to the client, which is stored in the front-end. These words are then used to fuzz and guess exposed object names. The tool includes a default wordlist based on [PortSwigger's param-miner](https://github.com/PortSwigger/param-miner). 

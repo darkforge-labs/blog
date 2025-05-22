@@ -44,7 +44,7 @@
         <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
 
   <header class="post-header">
-    <h1 class="post-title p-name" itemprop="name headline">CEFSharp Enumeration With CefEnum</h1>
+    <h1 class="post-title p-name" itemprop="name headline">CefSharp Enumeration With CefEnum</h1>
     <p class="post-meta">
       <time class="dt-published" datetime="2025-05-21T09:00:00+02:00" itemprop="datePublished">May 21, 2025
       </time></p>
@@ -52,9 +52,11 @@
 
   <div class="post-content e-content" itemprop="articleBody">
     <h2 id="tldr">TLDR</h2>
-<p><a href="https://github.com/cefsharp/CefSharp/">CefSharp</a> is widely embedded in .NET-based Thick-Clients, often without proper hardening or awareness of its security implications. For researchers and red teamers, this creates opportunities for stealthy exploitation, persistence, and even remote code execution (RCE) if misconfigurations are identified.</p>
+<p><a href="https://github.com/cefsharp/CefSharp/">CefSharp</a> is widely embedded in .NET-based Thick-Clients, often without proper hardening or awareness of its security implications. For researchers and red teamers, this creates opportunities for stealthy exploitation, persistence, and even RCE if misconfigurations are identified.</p>
 
 <p>In this post, we explore common misconfigurations and attack vectors encountered during testing. We’re also releasing a new enumeration tool to help you quickly identify and fingerprint CefSharp instances in your engagements.</p>
+
+<p><strong>Download CefEnum</strong>: <a href="https://github.com/darkforge-labs/cefenum">https://github.com/darkforge-labs/cefenum</a></p>
 
 <h2 id="cef">CEF</h2>
 <p>Before we discuss CefSharp, let’s look at <a href="https://github.com/chromiumembedded/cef">CEF</a> (Chromium Embedded Framework).</p>
@@ -91,7 +93,7 @@ CEF is a BSD-licensed open source project founded by Marshall Greenblatt in 2008
 
 <p>Before crafting any payloads, though, you need to understand which objects are exposed to the client/browser front-end via CefSharp.</p>
 
-<h2 id="finding-exposed-objects-with-access-to-the-client-source-code">Finding Exposed Objects, With Access To The Client Source Code.</h2>
+<h2 id="finding-exposed-objects-with-access-to-the-client-source-code">Finding Exposed Objects, With Access To The Client Source Code</h2>
 <p>This is straightforward. According to the CefSharp wiki, there are two methods to register your object with <code class="language-plaintext highlighter-rouge">browser.JavascriptObjectRepository</code>. In both examples below, the exposed object is named <code class="language-plaintext highlighter-rouge">boundAsync</code>, referencing the <code class="language-plaintext highlighter-rouge">BoundObject</code> class. (Note: bindable object names will generally follow camelCase, not PascalCase.)</p>
 
 <div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//For async object registration (equivalent to the old RegisterAsyncJsObject)</span>
@@ -146,7 +148,7 @@ CEF is a BSD-licensed open source project founded by Marshall Greenblatt in 2008
 
 <p><img src="/assets/images/28eb4850e5fc5953bd5ad52b663689356606ce33.png" alt="Drag Link Across" /></p>
 
-<h2 id="finding-exposed-objects-without-access-to-the-source-code">Finding Exposed Objects, without access to the source code.</h2>
+<h2 id="finding-exposed-objects-without-access-to-the-source-code">Finding Exposed Objects, without access to the source code</h2>
 <p>If you’re testing a client without access to its source code, you can use <a href="https://github.com/darkforge-labs/cefenum">CefEnum</a>. This simple tool helps detect CefSharp-based clients and identify .NET objects exposed to JavaScript.</p>
 
 <p>When you launch CefEnum, it starts an HTTP listener on port 9090 (configurable via the -port flag). Upon a client connection, CefEnum first delivers a wordlist to the client, which is stored in the front-end. These words are then used to fuzz and guess exposed object names. The tool includes a default wordlist based on <a href="https://github.com/PortSwigger/param-miner">PortSwigger’s param-miner</a>.</p>

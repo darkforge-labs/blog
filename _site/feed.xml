@@ -1,4 +1,89 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.4">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2025-05-22T09:18:54+02:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">The DarkForge Labs Blog</title><subtitle>Welcome to the DarkForge Labs blog! We explore topics that  intrigue us, from security research to upcoming events.  Enjoy your stay! – The DarkForge Labs Team</subtitle><entry><title type="html">CefSharp Enumeration With CefEnum</title><link href="http://localhost:4000/cef/cefsharp/cefenum/thick-client/.net/2025/05/21/CefSharp-Enumeration-With-CefEnum.html" rel="alternate" type="text/html" title="CefSharp Enumeration With CefEnum" /><published>2025-05-21T09:00:00+02:00</published><updated>2025-05-21T09:00:00+02:00</updated><id>http://localhost:4000/cef/cefsharp/cefenum/thick-client/.net/2025/05/21/CefSharp-Enumeration-With-CefEnum</id><content type="html" xml:base="http://localhost:4000/cef/cefsharp/cefenum/thick-client/.net/2025/05/21/CefSharp-Enumeration-With-CefEnum.html"><![CDATA[<h2 id="tldr">TLDR</h2>
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.4">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2025-06-09T17:30:32+02:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">The DarkForge Labs Blog</title><subtitle>Welcome to the DarkForge Labs blog! We explore topics that  intrigue us, from security research to upcoming events.  Enjoy your stay! – The DarkForge Labs Team</subtitle><entry><title type="html">HackCentral CTF</title><link href="http://localhost:4000/ctf/challenge/giveaway/2025/06/09/HackCentral-CTF.html" rel="alternate" type="text/html" title="HackCentral CTF" /><published>2025-06-09T10:00:00+02:00</published><updated>2025-06-09T10:00:00+02:00</updated><id>http://localhost:4000/ctf/challenge/giveaway/2025/06/09/HackCentral-CTF</id><content type="html" xml:base="http://localhost:4000/ctf/challenge/giveaway/2025/06/09/HackCentral-CTF.html"><![CDATA[<h2 id="introduction">Introduction</h2>
+
+<p>Thank you to everyone who participated in the HackCentral CTF, we hope you enjoyed solving the challenge as much as we enjoyed building it. Congratulations to Calum Rivers for being the first to solve the challenge, and to <a href="https://x.com/deNable_D">@deNable_D</a> for winning the giveaway! We hope you enjoy your prize.</p>
+
+<p><img src="/assets/images/57b1fd957a20ad9b6356541c5ae02921c340e1ed.png" alt="Banner for HackCentral" /></p>
+
+<p>Inspired by Orange Tsai’s research into Apache confusion attacks, we set out to create a custom CTF challenge that combines the DocumentRoot confusion vector with a lesser-known rewrite rule bypass technique.</p>
+
+<p>The challenge source code is available at:</p>
+<ul>
+  <li><a href="https://github.com/darkforge-labs/ctf-hackcentral">https://github.com/darkforge-labs/ctf-hackcentral</a></li>
+</ul>
+
+<p>You can also try the live version at:</p>
+<ul>
+  <li><a href="https://hackcentral.darkfor.ge/">https://hackcentral.darkfor.ge/</a></li>
+</ul>
+
+<h2 id="the-challenge">The Challenge</h2>
+
+<p>We begin by examining the <a href="https://github.com/darkforge-labs/ctf-hackcentral/blob/main/Dockerfile">Dockerfile</a>. Nothing appears immediately suspicious, but we note that <code class="language-plaintext highlighter-rouge">start.sh</code> is executed on container startup. On line 6, this script generates a random 64-character string, writes it to <code class="language-plaintext highlighter-rouge">secret.txt</code>, and places the file within the webroot at <code class="language-plaintext highlighter-rouge">/var/www/html</code>.</p>
+
+<p><img src="/assets/images/e38c9ed8d98f62b03c5c13d5788b43a6f39e4580.png" alt="start.sh" /></p>
+
+<p>Within the application files, we find a single script: <code class="language-plaintext highlighter-rouge">getFlag.php</code>. This script returns the contents of <code class="language-plaintext highlighter-rouge">flag.txt</code> <strong>only if</strong> the user supplies a valid <code class="language-plaintext highlighter-rouge">session</code> cookie. Otherwise, it returns a <code class="language-plaintext highlighter-rouge">403 Forbidden</code>. Therefore, our first task is to gain access to <code class="language-plaintext highlighter-rouge">secret.txt</code>.</p>
+
+<p><img src="/assets/images/80e94a8ff606688d93d5f4a6844d31ac66b6658b.png" alt="PHP Contents" /></p>
+
+<h2 id="accessing-secrettxt">Accessing secret.txt</h2>
+
+<p>Although <code class="language-plaintext highlighter-rouge">secret.txt</code> is placed in the webroot, requesting it directly <a href="https://hackcentral.darkfor.ge/secret.txt">https://hackcentral.darkfor.ge/secret.txt</a> returns a 403. This is due to Apache rewrite rules defined in <a href="https://github.com/darkforge-labs/ctf-hackcentral/blob/main/apache.conf">apache.conf</a>, where both direct access (<code class="language-plaintext highlighter-rouge">/secret.txt</code>) and requests via the <code class="language-plaintext highlighter-rouge">/old/</code> path are denied (see lines 2 and 5).</p>
+
+<p><img src="/assets/images/c85c6ad2ee8170980ea87f4014a967f0c26baa85.png" alt="apache configuration" /></p>
+
+<p>Interestingly, <code class="language-plaintext highlighter-rouge">/old/</code> is configured to rewrite requests to the root directory. Since the Deny rules block <code class="language-plaintext highlighter-rouge">/secret.txt</code> and <code class="language-plaintext highlighter-rouge">/old/secret.txt</code>, we need to find an alternate path that circumvents these restrictions.</p>
+
+<h2 id="documentroot-confusion">DocumentRoot Confusion</h2>
+
+<p>As detailed in Orange Tsai’s post on <a href="https://blog.orange.tw/posts/2024-08-confusion-attacks-en/#%F0%9F%94%A5-2-DocumentRoot-Confusion">DocumentRoot Confusion</a>, Apache may attempt to resolve the request both with and without prepending the DocumentRoot.</p>
+
+<p>This means we can trick Apache into loading a file using its full path from within a subdirectory. A request to:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">https://hackcentral.darkfor.ge/old/var/www/html/secret.txt</code>
+bypasses the rewrite rules and successfully discloses the contents of <code class="language-plaintext highlighter-rouge">secret.txt</code>.
+<img src="/assets/images/3cb522c765d251d5b50d6720942aa87ee9235250.png" alt="secret.txt" /></li>
+</ul>
+
+<h2 id="accessing-getflagphp">Accessing getFlag.php</h2>
+
+<p>With the value of <code class="language-plaintext highlighter-rouge">secret.txt</code> in hand, we are ready to retrieve the flag by making a request to <code class="language-plaintext highlighter-rouge">getFlag.php</code> with the <code class="language-plaintext highlighter-rouge">session</code> cookie set. However, <code class="language-plaintext highlighter-rouge">getFlag.php</code> is not located in the DocumentRoot, it resides in <code class="language-plaintext highlighter-rouge">/var/www/templates</code>.</p>
+
+<p>From the Apache config, we observe that requests to <code class="language-plaintext highlighter-rouge">/new/</code> are rewritten to <code class="language-plaintext highlighter-rouge">/var/www/templates/</code>. However, there is a catch: a <code class="language-plaintext highlighter-rouge">.html</code> suffix is automatically appended to any request within this directory. As a result, a request to:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">https://hackcentral.darkfor.ge/new/getFlag.php</code>
+will be rewritten to <code class="language-plaintext highlighter-rouge">/var/www/templates/getFlag.php.html</code>, which does not exist.</li>
+</ul>
+
+<h2 id="bypassing-the-html-suffix-with-acceptpathinfo">Bypassing the .html Suffix with AcceptPathInfo</h2>
+
+<p>According to the <a href="https://httpd.apache.org/docs/2.4/mod/core.html#acceptpathinfo">Apache documentation</a>, the <code class="language-plaintext highlighter-rouge">AcceptPathInfo</code> directive determines whether Apache accepts trailing path information after a filename. When enabled (as is the default for script handlers like PHP), Apache will treat extra path segments as values for the <code class="language-plaintext highlighter-rouge">PATH_INFO</code> environment variable.</p>
+
+<p>Since the challenge uses the official <code class="language-plaintext highlighter-rouge">php:8.2-apache</code> Docker image, which includes a PHP handler, we can exploit this behavior. By appending a trailing slash to our request, we can effectively bypass the <code class="language-plaintext highlighter-rouge">.html</code> suffix, as the rewritten path will now be interpreted as:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">/var/www/templates/getFlag.php/.html</code></li>
+</ul>
+
+<p>This allows Apache to execute <code class="language-plaintext highlighter-rouge">getFlag.php</code> and pass <code class="language-plaintext highlighter-rouge">.html</code> via <code class="language-plaintext highlighter-rouge">PATH_INFO</code>.</p>
+
+<p>To retrieve the flag:</p>
+
+<ol>
+  <li>Set the <code class="language-plaintext highlighter-rouge">session</code> cookie to the value found in <code class="language-plaintext highlighter-rouge">secret.txt</code>.</li>
+  <li>Make a request to:
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">https://hackcentral.darkfor.ge/new/getFlag.php/</code></li>
+    </ul>
+  </li>
+</ol>
+
+<p><img src="/assets/images/62a8a67fb37370792c32c3e6dab4863da8b32768.png" alt="Flag!" /></p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>This challenge demonstrates a combination of Apache misconfigurations, specifically DocumentRoot confusion and misuse of rewrite rules, paired with a subtle understanding of how Apache handles trailing path info. These bugs may seem innocuous individually, but when chained together, they enable full flag disclosure.</p>
+
+<p>We’ll be releasing more CTF challenges soon, stay tuned!</p>]]></content><author><name></name></author><category term="CTF" /><category term="Challenge" /><category term="Giveaway" /><summary type="html"><![CDATA[Introduction]]></summary></entry><entry><title type="html">CefSharp Enumeration With CefEnum</title><link href="http://localhost:4000/cef/cefsharp/cefenum/thick-client/.net/2025/05/21/CefSharp-Enumeration-With-CefEnum.html" rel="alternate" type="text/html" title="CefSharp Enumeration With CefEnum" /><published>2025-05-21T09:00:00+02:00</published><updated>2025-05-21T09:00:00+02:00</updated><id>http://localhost:4000/cef/cefsharp/cefenum/thick-client/.net/2025/05/21/CefSharp-Enumeration-With-CefEnum</id><content type="html" xml:base="http://localhost:4000/cef/cefsharp/cefenum/thick-client/.net/2025/05/21/CefSharp-Enumeration-With-CefEnum.html"><![CDATA[<h2 id="tldr">TLDR</h2>
 <p><a href="https://github.com/cefsharp/CefSharp/">CefSharp</a> is widely embedded in .NET-based Thick-Clients, often without proper hardening or awareness of its security implications. For researchers and red teamers, this creates opportunities for stealthy exploitation, persistence, and even RCE if misconfigurations are identified.</p>
 
 <p>In this post, we explore common misconfigurations and attack vectors encountered during testing. We’re also releasing a new enumeration tool to help you quickly identify and fingerprint CefSharp instances in your engagements.</p>
